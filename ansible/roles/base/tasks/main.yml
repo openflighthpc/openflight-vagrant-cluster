@@ -10,12 +10,8 @@
   service_facts:
 
 - name: Add mappings to /etc/hosts
-  blockinfile:
+  lineinfile:
     path: /etc/hosts
-    block: |
-      {{ item.ip }} {{ item.name }}
-    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
-  loop:
-    - { name: chead1,  ip: 172.17.177.11 }
-    - { name: cnode01, ip: 172.17.177.21 }
-    - { name: cnode02, ip: 172.17.177.22 }
+    line: "{{ item.ip }} {{ item.hostname }} {{ item.name }}"
+    state: present
+  with_items: "{{ etc_host_entries }}"

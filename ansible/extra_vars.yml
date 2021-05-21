@@ -1,6 +1,0 @@
-cluster_name: "ben1"
-compute_nodes: "cnode[01-02]"
-flightenv_dev: true
-flightenv_bootstrap: true
-# XXX Don't hardcode this.
-munge_key: "1c616544e99c418a281bee2e853d726172c255d3d51ed4302aefcf956d63f6dca5a463059212faee46aff7371237281f0cc4b0b8055f6fecbf34031967a30e3d"
