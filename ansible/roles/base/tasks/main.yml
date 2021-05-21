@@ -1,0 +1,21 @@
+- name: Waiting for nodes to be reachable
+  wait_for_connection:
+    sleep: 10
+    timeout: 600
+
+- name: Gather System Info
+  setup:
+
+- name: Gather Installed Services
+  service_facts:
+
+- name: Add mappings to /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    block: |
+      {{ item.ip }} {{ item.name }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+  loop:
+    - { name: chead1,  ip: 172.17.177.11 }
+    - { name: cnode01, ip: 172.17.177.21 }
+    - { name: cnode02, ip: 172.17.177.22 }
