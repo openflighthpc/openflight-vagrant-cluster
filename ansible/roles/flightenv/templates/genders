@@ -1,0 +1,2 @@
+{{ gateway_node }}  gateway,all
+{{ compute_nodes }} nodes,all

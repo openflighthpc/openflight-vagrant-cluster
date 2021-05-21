@@ -1,0 +1,10 @@
+# Paths to available types for desktop & env
+type_paths:
+  - /opt/flight/usr/lib/env/types
+  - /opt/flight/etc/env/types
+# Path to global/system-wide depots
+global_depot_path: /opt/apps/flight/env
+# Path to global/system-wide cache
+global_cache_path: /opt/apps/flight/env/cache
+# Path to global/system-wide build cache
+global_build_cache_path: /opt/apps/flight/env/cache/build

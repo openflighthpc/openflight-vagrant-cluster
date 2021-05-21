@@ -1,0 +1,37 @@
+- name: Install packages
+  yum:
+    name:
+      "{{ all_packages }}"
+    state: present
+    disable_gpg_check: yes
+  vars:
+    generic_list:
+      - flight-user-suite
+      - flight-plugin-system-systemd-service
+      - vte-profile
+    all_packages: "{{ generic_list + ['vte', 'pdsh', 'pdsh-mod-genders'] if ansible_distribution_major_version == '7' else generic_list }}"
+
+- name: Enable flight-service systemd integration
+  service: "name=flight-service state=started enabled=yes"
+
+- name: Set cluster name
+  command: "/opt/flight/bin/flight config set cluster.name {{ cluster_name }}"
+
+- name: Create genders file
+  template: src=genders dest=/opt/flight/etc/genders
+
+- name: Locate flight-env directory
+  shell: "rpm -ql flight-env |grep 'bin/flenv' |sed 's,/bin/flenv,,g'"
+  register: env_dir
+
+- name: Configure global software environment location
+  template: src=config.yml dest={{ env_dir['stdout'] }}/etc/config.yml
+
+- name: Configure Singularity environment to work for users
+  sysctl:
+    name: user.max_user_namespaces
+    value: '100'
+    sysctl_set: yes
+    state: present
+    reload: yes
+

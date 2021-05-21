@@ -1,0 +1,47 @@
+# Global
+cluster_name: mycluster # Used by SLURM and Flight Env
+gateway_node: chead1 #Used by SLURM and Flight Env (genders)
+compute_nodes: cnode[01-08]
+
+# FlightEnv Settings
+
+## If true will enable development repositories for OpenFlight packages,
+## installing the latest (and potentially volatile) versions of the user suite
+flightenv_dev: false
+
+## If true will additionally install dependencies for desktop environments.
+## Only recommended for gateway nodes!
+flightenv_bootstrap: false 
+
+# SLURM Settings
+slurm_role: exec # Default to SLURM compute node, override in subgroups
+munge_key: ReplaceThisWithMungeKeyRandomisedStringOrSomethingElseReallySecure
+
+# NFS Settings
+nfs_role: client # Default to NFS client, override in subgroups
+nfs_shares:
+  /export/apps:
+    server: chead1
+    mountpoint: /opt/apps
+    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
+  /export/data:
+    server: chead1
+    mountpoint: /data
+    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
+  /export/service:
+    server: chead1
+    mountpoint: /opt/service
+    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
+  /export/site:
+    server: chead1
+    mountpoint: /opt/site
+    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
+  /home:
+    server: chead1
+    mountpoint: /home
+    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail

@@ -1,0 +1,54 @@
+- name: Install NFS utils
+  yum: name=nfs-utils state=present
+
+- name: Create export directories
+  when: nfs_role == "server"
+  file:
+    path: "{{ item.key }}"
+    state: directory
+    mode: 0775
+  with_dict: "{{ nfs_shares }}"
+
+- name: Create export file
+  when: nfs_role == "server"
+  template: src=exports dest=/etc/exports
+
+- name: Create fstab file (client)
+  lineinfile:
+    path: /etc/fstab
+    line: "{{ item.value.server }}:{{ item.key }}    {{ item.value.mountpoint }}    nfs    {{ item.value.mount_opts }}    0 0"
+    state: present
+  with_dict: "{{ nfs_shares }}"
+  when: nfs_role == 'client'
+
+- name: Create fstab file (server - bindmounts)
+  lineinfile:
+    path: /etc/fstab
+    line: "{% if item.key != item.value.mountpoint %}{{ item.key }}    {{ item.value.mountpoint }}    none    defaults,bind    0 0{% endif %}"
+    state: present
+  with_dict: "{{ nfs_shares }}"
+  when: nfs_role == 'server'
+
+- name: Create mount directories
+  file:
+    path: "{{ item.value.mountpoint }}"
+    state: directory
+    mode: 0775
+  with_dict: "{{ nfs_shares }}"
+
+- name: Start NFS server service
+  service: "name=nfs-server state=started enabled=yes"
+  when: nfs_role == 'server' and ansible_distribution_major_version == '8'
+
+- name: Start NFS service
+  service: "name=nfs state=started enabled=yes"
+  when: ansible_distribution_major_version == '7'
+
+- name: Export mounts
+  when: nfs_role == 'server'
+  command: exportfs -va
+
+- name: Mount NFS exports
+  command: mount -a
+  args:
+    warn: no
