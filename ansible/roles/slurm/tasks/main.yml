@@ -49,7 +49,12 @@
   when: slurm_role == 'controller'
 
 - name: Install slurmdbd.conf
-  template: src=slurmdbd.conf dest=/opt/flight/opt/slurm/etc/slurmdbd.conf
+  template:
+    src: slurmdbd.conf
+    dest: /opt/flight/opt/slurm/etc/slurmdbd.conf
+    owner: nobody
+    group: nobody
+    mode: '0600'
   when: slurm_role == 'controller'
 
 - name: Turn on SlurmDBD
