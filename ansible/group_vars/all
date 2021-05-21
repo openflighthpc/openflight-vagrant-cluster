@@ -23,25 +23,25 @@ nfs_shares:
   /export/apps:
     server: chead1
     mountpoint: /opt/apps
-    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    export_opts: 172.17.177.0/255.255.255.0(rw,no_root_squash,sync)
     mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
   /export/data:
     server: chead1
     mountpoint: /data
-    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    export_opts: 172.17.177.0/255.255.255.0(rw,no_root_squash,sync)
     mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
   /export/service:
     server: chead1
     mountpoint: /opt/service
-    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    export_opts: 172.17.177.0/255.255.255.0(rw,no_root_squash,sync)
     mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
   /export/site:
     server: chead1
     mountpoint: /opt/site
-    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    export_opts: 172.17.177.0/255.255.255.0(rw,no_root_squash,sync)
     mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
   /home:
     server: chead1
     mountpoint: /home
-    export_opts: 10.10.0.0/255.255.0.0(rw,no_root_squash,sync)
+    export_opts: 172.17.177.0/255.255.255.0(rw,no_root_squash,sync)
     mount_opts: intr,rsize=32768,wsize=32768,vers=3,_netdev,nofail
