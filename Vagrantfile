@@ -63,8 +63,8 @@ Vagrant.configure("2") do |config|
       build.vm.network "private_network", ip: node[:private_ip]
 
       if is_gateway
-        build.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: '127.0.0.1'
-        build.vm.network "forwarded_port", guest: 443, host: 8443, host_ip: '127.0.0.1'
+        build.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: '127.0.0.1'
+        build.vm.network "forwarded_port", guest: 8443, host: 8443, host_ip: '127.0.0.1'
 
         if File.directory?(code_path)
           build.vm.synced_folder code_path, "/code"

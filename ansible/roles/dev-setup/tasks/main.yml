@@ -1,0 +1,8 @@
+# Miscellaneous tasks to make the cluster nicer to develop on.
+
+- name: Install some nice-to-have packages
+  yum:
+    name:
+      - vim
+    state: present
+  when: slurm_role == 'controller'

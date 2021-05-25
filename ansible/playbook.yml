@@ -16,3 +16,5 @@
     - flightenv
     - flightenv-bootstrap
     - flightweb
+    - vagrant-fixes
+    - dev-setup
