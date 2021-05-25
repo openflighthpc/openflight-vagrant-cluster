@@ -2,7 +2,7 @@ Vagrant.configure("2") do |config|
   code_path = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
 
   # Number of compute nodes.  Must be between 1 and 9.
-  NUM_NODES = 2
+  NUM_NODES = 1
 
   # NOTE: If changing the IP address below also change the network in
   # `nfs_shares`.
@@ -39,7 +39,7 @@ Vagrant.configure("2") do |config|
   end.to_h
 
   ansible_extra_vars = {
-    'cluster_name' => 'ben1',
+    'cluster_name' => ENV.fetch('CLUSTER_NAME', 'dev'),
     'compute_nodes' => "cnode[01-0#{NUM_NODES}]",
     'flightenv_dev' => true,
     'flightenv_bootstrap' => true,
@@ -62,9 +62,38 @@ Vagrant.configure("2") do |config|
 
       build.vm.network "private_network", ip: node[:private_ip]
 
+      # XXX Make something like this work.   Perhaps pass an existing key path
+      # via an ENV var?
+      # https://stackoverflow.com/questions/30075461/how-do-i-add-my-own-public-key-to-vagrant-vm
+      # Configure the non-gateway machines to use the same public key as the
+      # gateway.
+      # unless is_gateway
+      #   build.ssh.private_key_path = ".vagrant/machines/chead1/virtualbox/private_key"
+      # end
+
       if is_gateway
-        build.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: '127.0.0.1'
-        build.vm.network "forwarded_port", guest: 8443, host: 8443, host_ip: '127.0.0.1'
+        # Expose Flight WWW
+        build.vm.network "forwarded_port",
+          guest: 8080,
+          host: 8080,
+          host_ip: '127.0.0.1'
+        build.vm.network "forwarded_port",
+          guest: 8443,
+          host: 8443,
+          host_ip: '127.0.0.1'
+
+        # Expose ports used by development webapps and api, e.g.,
+        # `flight-desktop-webapp`, and `flight-desktop-restapi.
+        if ENV['EXPOSE_DEV_PORTS'] == 'true'
+          [ (3000..3009), (6305..6312) ].each do |range|
+            range.each do |port|
+              build.vm.network "forwarded_port",
+                guest: port,
+                host: "#{ENV['DEV_PORT_PREFIX']}#{port}",
+                host_ip: '127.0.0.1'
+            end
+          end
+        end
 
         if File.directory?(code_path)
           build.vm.synced_folder code_path, "/code"
@@ -73,7 +102,7 @@ Vagrant.configure("2") do |config|
         build.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "ansible/playbook.yml"
           ansible.verbose = true
-          ansible.limit = 'all'
+          ansible.limit = ENV.fetch('ANSIBLE_LIMIT', 'all')
           ansible.groups = ansible_groups
           ansible.host_vars = ansible_host_vars
 

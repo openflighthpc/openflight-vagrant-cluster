@@ -1,1 +1,1 @@
-cookieDomain: "{{ gateway_node_pub_ip.stdout }}"
+cookieDomain: "{{ gateway_domain.stdout }}"

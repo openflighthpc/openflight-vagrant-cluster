@@ -25,11 +25,6 @@
   ignore_errors: yes
   when: slurm_role == 'controller'
 
-- name: Identify public IP of gateway
-  command: "curl https://ifconfig.me"
-  register: gateway_node_pub_ip
-  when: slurm_role == 'controller'
-
 - name: Put web suite files in place
   template:
     src: "{{ item.src }}"
@@ -45,8 +40,8 @@
     path: "{{ item.path }}"
     line: "{{ item.line }}"
   loop:
-    - { path: '/opt/flight/etc/service/env/login-api', line: 'FLIGHT_LOGIN_SSO_COOKIE_DOMAIN={{ gateway_node_pub_ip.stdout }}' }
-    - { path: '/opt/flight/etc/service/env/file-manager-api', line: 'flight_FILE_MANAGER_API_cloudcmd_cookie_domain={{ gateway_node_pub_ip.stdout }}' }
+    - { path: '/opt/flight/etc/service/env/login-api', line: 'FLIGHT_LOGIN_SSO_COOKIE_DOMAIN={{ gateway_domain.stdout }}' }
+    - { path: '/opt/flight/etc/service/env/file-manager-api', line: 'flight_FILE_MANAGER_API_cloudcmd_cookie_domain={{ gateway_domain.stdout }}' }
   when: slurm_role == 'controller'
 
 - name: Apply configuration changes

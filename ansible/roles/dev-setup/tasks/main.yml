@@ -1,8 +1,40 @@
 # Miscellaneous tasks to make the cluster nicer to develop on.
 
-- name: Install some nice-to-have packages
+- name: Install nice-to-have dev packages
   yum:
     name:
       - vim
     state: present
+  when: slurm_role == 'controller'
+
+- name: Flight WWW DEV landing page links to DEV apps
+  template:
+    src: "{{ item.src }}"
+    dest: "/code/flight-landing-page/landing-page/overridden/{{ item.dest }}"
+    backup: true
+  loop:
+    - { src: 'console.md',       dest: 'content/apps/' }
+    - { src: 'desktop.md',       dest: 'content/apps/' }
+    - { src: 'file-manager.md',  dest: 'content/apps/' }
+    - { src: 'job-script.md',    dest: 'content/apps/' }
+    - { src: 'environment.yaml', dest: 'content/data/' }
+  when: slurm_role == 'controller'
+
+- name: Apply configuration changes
+  shell: |
+    cd /code/flight-landing-page/landing-page
+    /opt/flight/bin/ruby ../bin/nanoc compile
+  when: slurm_role == 'controller'
+
+- name: Configure Flight WWW to proxy to dev apps
+  template:
+    src: dev-web-suite.conf
+    dest: /opt/flight/etc/www/server-https.d/
+    owner: root
+    group: root
+    mode: '0644'
+  when: slurm_role == 'controller'
+
+- name: Restart Flight WWW
+  command: /opt/flight/bin/flight service restart www
   when: slurm_role == 'controller'

@@ -4,9 +4,11 @@
 # Vagrant cannot forward guest ports to privileged ports on the host.  To
 # support redirecting from HTTP to HTTPS correctly, we configure `flight-www`
 # to run on the same ports as we forward on the host.
-- name: Change ports for flight-www
+- name: Change ports for Flight WWW
   shell: |
     /opt/flight/bin/flight service configure www --config '{"port": "8080", "https_port": "8443"}'
+  when: slurm_role == 'controller'
 
-- name: Restart flight-www
-  shell: /opt/flight/bin/flight service restart www
+- name: Restart Flight WWW
+  command: /opt/flight/bin/flight service restart www
+  when: slurm_role == 'controller'
