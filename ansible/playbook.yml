@@ -9,9 +9,6 @@
     - base
     - upstream
     - slurm
-    # The NFS role/tasks changes the `.ssh/authorized_keys` file on the
-    # compute nodes, breaking ansible access to them. So `nfs` must be ran
-    # after ansible has finished with the compute nodes.
     - nfs
     - flightenv
     - flightenv-bootstrap

@@ -23,16 +23,70 @@ Vagrant.configure("2") do |config|
     }
   ]
 
+  # If this key does not exist, we'll use Vagrant's inserted custom keys.  The
+  # effect of that will be that ansible won't work on the compute nodes once
+  # the NFS step has been ran.  There is not any real issue with that, as that
+  # is the last ansible step that runs on the compute nodes, but its nicer if
+  # it does work.
+  ssh_prv_key_path = [File.expand_path('~/.ssh/openflight-vagrant-cluster.key')]
+    .compact.select {|k| File.file?(k)}.first
+
+  if ssh_prv_key_path
+    # The openflight-vagrant-cluster key exists.  We insert it in much the
+    # same way that Vagrant would insert a per-node key if
+    # `config.ssh.insert_key = true`.  However, it is the same key for all
+    # nodes and doesn't change once NFS is mounted on the compute nodes.
+    config.ssh.forward_agent    = false
+    config.ssh.insert_key       = false
+    config.ssh.private_key_path =  ["~/.vagrant.d/insecure_private_key", ssh_prv_key_path]
+      .compact.select {|k| File.file?(File.expand_path(k))}
+
+    config.vm.provision "shell", privileged: false do |s|
+      ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
+      if !ssh_prv_key_path.nil? && !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
+        s.inline = <<-SHELL
+          echo "No SSH key found. This will never be ran but needs to exist. :shrug:"
+          exit 0
+        SHELL
+      else
+        ssh_prv_key = File.read(ssh_prv_key_path)
+        ssh_pub_key = File.readlines(ssh_pub_key_path).first.strip
+        s.inline = <<-SHELL
+              if grep -sq "#{ssh_pub_key}" /home/$USER/.ssh/authorized_keys; then
+                echo "SSH keys already provisioned."
+                exit 0;
+              fi
+              echo "SSH key provisioning."
+              mkdir -p /home/$USER/.ssh/
+              touch /home/$USER/.ssh/authorized_keys
+              echo #{ssh_pub_key} >> /home/$USER/.ssh/authorized_keys
+              sed -i -s '/vagrant insecure public key/d' /home/$USER/.ssh/authorized_keys
+              echo #{ssh_pub_key} > /home/$USER/.ssh/id_rsa.pub
+              chmod 644 /home/$USER/.ssh/id_rsa.pub
+              echo "#{ssh_prv_key}" > /home/$USER/.ssh/id_rsa
+              chmod 600 /home/$USER/.ssh/id_rsa
+              #chown -R $USER:$USER /home/$USER
+              exit 0
+        SHELL
+      end
+    end
+  end
+
   ansible_groups = {
     "gateway" => nodes.select{|n| n[:type] == 'gateway'}.map{|n| n[:vmname]},
     "nodes"   => nodes.select{|n| n[:type] == 'node'}.map{|n| n[:vmname]},
   }
 
   ansible_host_vars = nodes.select{|n| n[:type] == 'node'}.map do |node|
+    # This needs to be the path as resolved on `chead1`.
+    ansible_ssh_private_key_file = ssh_prv_key_path.nil? ?
+      "/vagrant/.vagrant/machines/#{node[:vmname]}/virtualbox/private_key" :
+      "/home/vagrant/.ssh/id_rsa"
+
     [
       node[:vmname], { 
         "ansible_host" => node[:private_ip],
-        "ansible_ssh_private_key_file" => "/vagrant/.vagrant/machines/#{node[:vmname]}/virtualbox/private_key",
+        "ansible_ssh_private_key_file" => ansible_ssh_private_key_file,
         "ansible_ssh_extra_args" => "'-o StrictHostKeyChecking=no'",
       }
     ]
@@ -61,15 +115,6 @@ Vagrant.configure("2") do |config|
       build.vm.hostname = node[:hostname]
 
       build.vm.network "private_network", ip: node[:private_ip]
-
-      # XXX Make something like this work.   Perhaps pass an existing key path
-      # via an ENV var?
-      # https://stackoverflow.com/questions/30075461/how-do-i-add-my-own-public-key-to-vagrant-vm
-      # Configure the non-gateway machines to use the same public key as the
-      # gateway.
-      # unless is_gateway
-      #   build.ssh.private_key_path = ".vagrant/machines/chead1/virtualbox/private_key"
-      # end
 
       if is_gateway
         # Expose Flight WWW
