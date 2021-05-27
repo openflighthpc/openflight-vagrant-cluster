@@ -77,7 +77,8 @@ TODO: Finish documentation
 
 * Before the webapp can be used it needs to be configured to use either the
   development or RPM apis.  Edit the webapp's `.env.development` file.  E.g.,
-  `/code/desktop-webapp/.env.development`.  The file should be well commented.
+  `/code/flight-desktop-webapp/.env.development`.  The file should be well
+  commented.
 * The webapp can be started by running `yarn run start` from the webapp's
   directory.
 
