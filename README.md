@@ -44,6 +44,13 @@ The nodes share a private network, which defaults to `172.17.177.0/24`. You
 can change this by editing [Vagrantfile](Vagrantfile) and the [ansible group
 vars](ansible/group_vars/all).
 
+### SSH key configuration
+
+By default vagrant will install custom SSH keys.  Unfotunately, there are some
+issues surrounding use of those keys, NFS and ansible.
+
+To work around those issues you can create passwordless SSH key and store in
+at `~/.ssh/openflight-vagrant-cluster.key`.
 
 ## Developing Flight User Suite applications
 
@@ -81,6 +88,10 @@ TODO: Finish documentation
   commented.
 * The webapp can be started by running `yarn run start` from the webapp's
   directory.
+* If the webapp is using the development API, you will need to ensure that it
+  is configured accoring to your requirements.  E.g., you may want
+  `flight-job-script-api` to use `flight-job` located at `/code` or the one
+  installed via RPM.
 
 ---
 
