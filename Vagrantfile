@@ -1,7 +1,19 @@
 # vim: set filetype=ruby:
 
 Vagrant.configure("2") do |config|
+  acceptance_prep = ENV['ACCEPTANCE_PREP']
+  acceptance_prep = true if acceptance_prep == "true"
   code_path = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
+  if !acceptance_prep && !File.directory?(File.expand_path(code_path))
+    $stderr.puts <<-EOF
+    Code path is not set.
+    
+    Either set the environment variable FLIGHT_CODE or create a symlink at
+    $HOME/code pointing to the directory containing your OpenFlight github
+    repositories.
+    EOF
+    exit 1
+  end
 
   # Number of compute nodes.  Must be between 1 and 9.
   NUM_NODES = 1
@@ -154,7 +166,9 @@ Vagrant.configure("2") do |config|
         end
 
         build.vm.provision "ansible_local" do |ansible|
-          ansible.playbook = "ansible/playbook.yml"
+          ansible.playbook = acceptance_prep ?
+            "ansible/playbook-acceptance-prep.yml" :
+            "ansible/playbook.yml"
           ansible.verbose = true
           ansible.limit = ENV.fetch('ANSIBLE_LIMIT', 'all')
           ansible.groups = ansible_groups
