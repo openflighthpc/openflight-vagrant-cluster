@@ -15,6 +15,20 @@ Vagrant.configure("2") do |config|
     exit 1
   end
 
+  # Using Vagrant's inserted custom keys can result in suprising ansible
+  # behaviour on the compute nodes once NFS has been setup.  We avoid that
+  # behaviour by insisting on a single key used for all nodes.
+  ssh_prv_key_path = [File.expand_path('~/.ssh/openflight-vagrant-cluster.key')]
+    .compact.select {|k| File.file?(k)}.first
+  if !ssh_prv_key_path
+    $stderr.puts <<-EOF
+    You need to create a passwordless SSH key and save it to
+    ~/.ssh/openflight-vagrant-cluster.key
+    EOF
+
+    exit 1
+  end
+
   # Number of compute nodes.  Must be between 1 and 9.
   NUM_NODES = 1
 
@@ -39,52 +53,42 @@ Vagrant.configure("2") do |config|
     }
   ]
 
-  # If this key does not exist, we'll use Vagrant's inserted custom keys.  The
-  # effect of that will be that ansible won't work on the compute nodes once
-  # the NFS step has been ran.  There is not any real issue with that, as that
-  # is the last ansible step that runs on the compute nodes, but its nicer if
-  # it does work.
-  ssh_prv_key_path = [File.expand_path('~/.ssh/openflight-vagrant-cluster.key')]
-    .compact.select {|k| File.file?(k)}.first
+  # The openflight-vagrant-cluster key exists.  We insert it in much the
+  # same way that Vagrant would insert a per-node key if
+  # `config.ssh.insert_key = true`.  However, it is the same key for all
+  # nodes and doesn't change once NFS is mounted on the compute nodes.
+  config.ssh.forward_agent    = false
+  config.ssh.insert_key       = false
+  config.ssh.private_key_path =  ["~/.vagrant.d/insecure_private_key", ssh_prv_key_path]
+    .compact.select {|k| File.file?(File.expand_path(k))}
 
-  if ssh_prv_key_path
-    # The openflight-vagrant-cluster key exists.  We insert it in much the
-    # same way that Vagrant would insert a per-node key if
-    # `config.ssh.insert_key = true`.  However, it is the same key for all
-    # nodes and doesn't change once NFS is mounted on the compute nodes.
-    config.ssh.forward_agent    = false
-    config.ssh.insert_key       = false
-    config.ssh.private_key_path =  ["~/.vagrant.d/insecure_private_key", ssh_prv_key_path]
-      .compact.select {|k| File.file?(File.expand_path(k))}
-
-    config.vm.provision "shell", privileged: false do |s|
-      ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
-      if !ssh_prv_key_path.nil? && !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
-        s.inline = <<-SHELL
-          echo "No SSH key found. This will never be ran but needs to exist. :shrug:"
-          exit 0
-        SHELL
-      else
-        ssh_prv_key = File.read(ssh_prv_key_path)
-        ssh_pub_key = File.readlines(ssh_pub_key_path).first.strip
-        s.inline = <<-SHELL
-              if grep -sq "#{ssh_pub_key}" /home/$USER/.ssh/authorized_keys; then
-                echo "SSH keys already provisioned."
-                exit 0;
-              fi
-              echo "SSH key provisioning."
-              mkdir -p /home/$USER/.ssh/
-              touch /home/$USER/.ssh/authorized_keys
-              echo #{ssh_pub_key} >> /home/$USER/.ssh/authorized_keys
-              sed -i -s '/vagrant insecure public key/d' /home/$USER/.ssh/authorized_keys
-              echo #{ssh_pub_key} > /home/$USER/.ssh/id_rsa.pub
-              chmod 644 /home/$USER/.ssh/id_rsa.pub
-              echo "#{ssh_prv_key}" > /home/$USER/.ssh/id_rsa
-              chmod 600 /home/$USER/.ssh/id_rsa
-              #chown -R $USER:$USER /home/$USER
-              exit 0
-        SHELL
-      end
+  config.vm.provision "shell", privileged: false do |s|
+    ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
+    if !ssh_prv_key_path.nil? && !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
+      s.inline = <<-SHELL
+        echo "No SSH key found. This will never be ran but needs to exist. :shrug:"
+        exit 0
+      SHELL
+    else
+      ssh_prv_key = File.read(ssh_prv_key_path)
+      ssh_pub_key = File.readlines(ssh_pub_key_path).first.strip
+      s.inline = <<-SHELL
+        if grep -sq "#{ssh_pub_key}" /home/$USER/.ssh/authorized_keys; then
+          echo "SSH keys already provisioned."
+          exit 0;
+        fi
+        echo "SSH key provisioning."
+        mkdir -p /home/$USER/.ssh/
+        touch /home/$USER/.ssh/authorized_keys
+        echo #{ssh_pub_key} >> /home/$USER/.ssh/authorized_keys
+        sed -i -s '/vagrant insecure public key/d' /home/$USER/.ssh/authorized_keys
+        echo #{ssh_pub_key} > /home/$USER/.ssh/id_rsa.pub
+        chmod 644 /home/$USER/.ssh/id_rsa.pub
+        echo "#{ssh_prv_key}" > /home/$USER/.ssh/id_rsa
+        chmod 600 /home/$USER/.ssh/id_rsa
+        #chown -R $USER:$USER /home/$USER
+        exit 0
+      SHELL
     end
   end
 
@@ -95,9 +99,7 @@ Vagrant.configure("2") do |config|
 
   ansible_host_vars = nodes.select{|n| n[:type] == 'node'}.map do |node|
     # This needs to be the path as resolved on `chead1`.
-    ansible_ssh_private_key_file = ssh_prv_key_path.nil? ?
-      "/vagrant/.vagrant/machines/#{node[:vmname]}/virtualbox/private_key" :
-      "/home/vagrant/.ssh/id_rsa"
+    ansible_ssh_private_key_file = "/home/vagrant/.ssh/id_rsa"
 
     [
       node[:vmname], { 
