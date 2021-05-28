@@ -20,12 +20,6 @@
     - { src: 'environment.yaml', dest: 'content/data/' }
   when: slurm_role == 'controller'
 
-- name: Apply configuration changes
-  shell: |
-    cd /code/flight-landing-page/landing-page
-    /opt/flight/bin/ruby ../bin/nanoc compile
-  when: slurm_role == 'controller'
-
 - name: Configure Flight WWW to proxy to dev apps
   template:
     src: dev-web-suite.conf
