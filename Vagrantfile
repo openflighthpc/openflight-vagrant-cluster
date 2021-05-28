@@ -1,3 +1,5 @@
+# vim: set filetype=ruby:
+
 Vagrant.configure("2") do |config|
   code_path = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
 
@@ -12,6 +14,7 @@ Vagrant.configure("2") do |config|
         vmname: "cnode0#{idx}",
         hostname: "cnode0#{idx}.flight.lvh.me",
         private_ip: "172.17.177.2#{idx}",
+        ssh_port: 2300 + idx,
         type: 'node',
       }
     end,
@@ -19,6 +22,7 @@ Vagrant.configure("2") do |config|
       vmname: 'chead1',
       hostname: 'chead1.flight.lvh.me',
       private_ip: '172.17.177.11',
+      ssh_port: 2200,
       type: 'gateway',
     }
   ]
@@ -115,6 +119,11 @@ Vagrant.configure("2") do |config|
       build.vm.hostname = node[:hostname]
 
       build.vm.network "private_network", ip: node[:private_ip]
+
+      build.vm.network "forwarded_port",
+        guest: 22,
+        host: node[:ssh_port],
+        id: 'ssh'
 
       if is_gateway
         # Expose Flight WWW
