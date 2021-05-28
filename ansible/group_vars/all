@@ -7,11 +7,11 @@ compute_nodes: cnode[01-08]
 
 ## If true will enable development repositories for OpenFlight packages,
 ## installing the latest (and potentially volatile) versions of the user suite
-flightenv_dev: false
+flightenv_dev: true
 
-## If true will additionally install dependencies for desktop environments.
-## Only recommended for gateway nodes!
-flightenv_bootstrap: false 
+# Colon separated list of desktop types to bootstrap. E.g., "xterm:gnome".
+bootstrap_desktop_types: "xterm"
+bootstrap_gridware_binaries: false 
 
 # SLURM Settings
 slurm_role: exec # Default to SLURM compute node, override in subgroups

@@ -1,15 +1,9 @@
-- name: Prepare gnome desktop
-  command: "/opt/flight/bin/flight desktop prepare gnome"
+- name: Prepare desktop types
+  command: "/opt/flight/bin/flight desktop prepare {{ item }}"
   async: 600
   poll: 15
+  loop: "{{ bootstrap_desktop_types | split(':') }}"
   when:
-    - flightenv_bootstrap
-    - "'gateway' in group_names"
-
-- name: Prepare xterm desktop
-  command: "/opt/flight/bin/flight desktop prepare xterm"
-  when:
-    - flightenv_bootstrap
     - "'gateway' in group_names"
 
 - name: Add gridware binary support
@@ -18,7 +12,7 @@
     state: directory
     mode: 1023
   when:
-    - flightenv_bootstrap
+    - bootstrap_gridware_binaries
     - "'gateway' in group_names"
     - ansible_architecture == 'x86_64'
 
@@ -28,6 +22,6 @@
     dest: /
     remote_src: yes
   when:
-    - flightenv_bootstrap
+    - bootstrap_gridware_binaries
     - "'gateway' in group_names"
     - ansible_distribution == "CentOS" and ansible_distribution_major_version == '7'

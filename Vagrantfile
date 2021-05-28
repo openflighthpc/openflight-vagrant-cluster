@@ -111,8 +111,8 @@ Vagrant.configure("2") do |config|
   ansible_extra_vars = {
     'cluster_name' => ENV.fetch('CLUSTER_NAME', 'dev'),
     'compute_nodes' => "cnode[01-0#{NUM_NODES}]",
-    'flightenv_dev' => true,
-    'flightenv_bootstrap' => true,
+    'flightenv_dev' => ENV['FLIGHTENV_DEV'] != "false",
+    'bootstrap_gridware_binaries' => ENV['BOOTSTRAP_GRIDWARE_BINARIES'] == "true",
     'munge_key' => SecureRandom.hex(48),
     'etc_host_entries' => nodes.map do |n|
       {
@@ -122,6 +122,9 @@ Vagrant.configure("2") do |config|
       }
     end
   }
+  if !ENV['BOOTSTRAP_DESKTOP_TYPES'].nil?
+    ansible_extra_vars['bootstrap_desktop_types'] = ENV['BOOTSTRAP_DESKTOP_TYPES']
+  end
 
   nodes.each do |node|
     is_gateway = node[:type] == 'gateway'
