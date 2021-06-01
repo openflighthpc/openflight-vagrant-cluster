@@ -22,9 +22,9 @@ Vagrant.configure("2") do |config|
   ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
   if !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
     $stderr.puts <<-EOF
-      You need to create a passwordless SSH key and save it to
+      You need to create a passwordless SSH key-pair and save them to
       ~/.ssh/openflight-vagrant-cluster.key
-      (along with a corresponding ~/.ssh/openflight-vagrant-cluster.key.pub).
+      ~/.ssh/openflight-vagrant-cluster.key.pub
     EOF
     exit 1
   end
