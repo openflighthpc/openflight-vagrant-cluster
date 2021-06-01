@@ -3,6 +3,7 @@
 - name: Install nice-to-have dev packages
   yum:
     name:
+      - tmux
       - vim
     state: present
   when: slurm_role == 'controller'
