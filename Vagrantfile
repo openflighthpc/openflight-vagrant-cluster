@@ -18,14 +18,14 @@ Vagrant.configure("2") do |config|
   # Using Vagrant's inserted custom keys can result in suprising ansible
   # behaviour on the compute nodes once NFS has been setup.  We avoid that
   # behaviour by insisting on a single key used for all nodes.
-  ssh_prv_key_path = [File.expand_path('~/.ssh/openflight-vagrant-cluster.key')]
-    .compact.select {|k| File.file?(k)}.first
-  if !ssh_prv_key_path
+  ssh_prv_key_path = File.expand_path('~/.ssh/openflight-vagrant-cluster.key')
+  ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
+  if !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
     $stderr.puts <<-EOF
-    You need to create a passwordless SSH key and save it to
-    ~/.ssh/openflight-vagrant-cluster.key
+      You need to create a passwordless SSH key and save it to
+      ~/.ssh/openflight-vagrant-cluster.key
+      (along with a corresponding ~/.ssh/openflight-vagrant-cluster.key.pub).
     EOF
-
     exit 1
   end
 
@@ -66,7 +66,7 @@ Vagrant.configure("2") do |config|
     ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
     if !ssh_prv_key_path.nil? && !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
       s.inline = <<-SHELL
-        echo "No SSH key found. This will never be ran but needs to exist. :shrug:"
+        echo "No SSH key found. This should have been caught above. Fix this or things are likely broken. :shrug:"
         exit 0
       SHELL
     else
