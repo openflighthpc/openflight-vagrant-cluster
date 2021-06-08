@@ -185,7 +185,7 @@ Vagrant.configure("2") do |config|
 
         build.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "ansible/playbook-#{FLAVOUR}.yml"
-          ansible.verbose = true
+          ansible.verbose = false
           ansible.limit = ENV.fetch('ANSIBLE_LIMIT', 'all')
           ansible.groups = ansible_groups
           ansible.host_vars = ansible_host_vars
