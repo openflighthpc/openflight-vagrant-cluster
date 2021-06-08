@@ -49,8 +49,9 @@ vars](ansible/group_vars/all).
 By default vagrant will install custom SSH keys.  Unfotunately, there are some
 issues surrounding use of those keys, NFS and ansible.
 
-To work around those issues you can create passwordless SSH key and store in
-at `~/.ssh/openflight-vagrant-cluster.key`.
+To work around those issues you will need to create a passwordless SSH key
+pair and save them to `~/.ssh/openflight-vagrant-cluster.key` /
+`~/.ssh/openflight-vagrant-cluster.key.pub`.
 
 ## Developing Flight User Suite applications
 
@@ -64,9 +65,6 @@ application, you would do the following:
 cd /code/flight-desktop
 /opt/flight/bin/ruby ./bin/desktop --help
 ```
-
-TODO: Install `rbenv` on `chead1`, so that Ruby apps can be ran without using
-`flight-runway`'s Ruby.
 
 ## Developing Flight Web Suite applications
 

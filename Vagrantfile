@@ -1,34 +1,43 @@
 # vim: set filetype=ruby:
 
+FLAVOUR = ENV.fetch('FLAVOUR', 'dev')
+unless %w(dev acceptance).include?(FLAVOUR)
+  $stderr.puts <<-EOF
+    Unknown flavour #{FLAVOUR.inspect}
+
+    Environment variable FLAVOUR must be one of 'dev' or 'acceptance'
+    Defaults to 'dev'.
+  EOF
+  exit 1
+end
+
+CODE_PATH = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
+if FLAVOUR == 'dev' && !File.directory?(File.expand_path(CODE_PATH))
+  $stderr.puts <<-EOF
+  Code path is not set.
+  
+  Either set the environment variable FLIGHT_CODE or create a symlink at
+  $HOME/code pointing to the directory containing your OpenFlight github
+  repositories.
+  EOF
+  exit 1
+end
+
+# Using Vagrant's inserted custom keys can result in suprising ansible
+# behaviour on the compute nodes once NFS has been setup.  We avoid that
+# behaviour by insisting on a single key used for all nodes.
+SSH_PRV_KEY_PATH = File.expand_path('~/.ssh/openflight-vagrant-cluster.key')
+SSH_PUB_KEY_PATH = "#{SSH_PRV_KEY_PATH}.pub"
+if !File.file?(SSH_PRV_KEY_PATH) || !File.file?(SSH_PUB_KEY_PATH)
+  $stderr.puts <<-EOF
+    You need to create a passwordless SSH key-pair and save them to
+    ~/.ssh/openflight-vagrant-cluster.key
+    ~/.ssh/openflight-vagrant-cluster.key.pub
+  EOF
+  exit 1
+end
+
 Vagrant.configure("2") do |config|
-  acceptance_prep = ENV['ACCEPTANCE_PREP']
-  acceptance_prep = true if acceptance_prep == "true"
-  code_path = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
-  if !acceptance_prep && !File.directory?(File.expand_path(code_path))
-    $stderr.puts <<-EOF
-    Code path is not set.
-    
-    Either set the environment variable FLIGHT_CODE or create a symlink at
-    $HOME/code pointing to the directory containing your OpenFlight github
-    repositories.
-    EOF
-    exit 1
-  end
-
-  # Using Vagrant's inserted custom keys can result in suprising ansible
-  # behaviour on the compute nodes once NFS has been setup.  We avoid that
-  # behaviour by insisting on a single key used for all nodes.
-  ssh_prv_key_path = File.expand_path('~/.ssh/openflight-vagrant-cluster.key')
-  ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
-  if !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
-    $stderr.puts <<-EOF
-      You need to create a passwordless SSH key-pair and save them to
-      ~/.ssh/openflight-vagrant-cluster.key
-      ~/.ssh/openflight-vagrant-cluster.key.pub
-    EOF
-    exit 1
-  end
-
   # Number of compute nodes.  Must be between 1 and 9.
   NUM_NODES = 1
 
@@ -59,19 +68,18 @@ Vagrant.configure("2") do |config|
   # nodes and doesn't change once NFS is mounted on the compute nodes.
   config.ssh.forward_agent    = false
   config.ssh.insert_key       = false
-  config.ssh.private_key_path =  ["~/.vagrant.d/insecure_private_key", ssh_prv_key_path]
+  config.ssh.private_key_path =  ["~/.vagrant.d/insecure_private_key", SSH_PRV_KEY_PATH]
     .compact.select {|k| File.file?(File.expand_path(k))}
 
   config.vm.provision "shell", privileged: false do |s|
-    ssh_pub_key_path = "#{ssh_prv_key_path}.pub"
-    if !ssh_prv_key_path.nil? && !File.file?(ssh_prv_key_path) || !File.file?(ssh_pub_key_path)
+    if !SSH_PRV_KEY_PATH.nil? && !File.file?(SSH_PRV_KEY_PATH) || !File.file?(SSH_PUB_KEY_PATH)
       s.inline = <<-SHELL
         echo "No SSH key found. This should have been caught above. Fix this or things are likely broken. :shrug:"
         exit 0
       SHELL
     else
-      ssh_prv_key = File.read(ssh_prv_key_path)
-      ssh_pub_key = File.readlines(ssh_pub_key_path).first.strip
+      ssh_prv_key = File.read(SSH_PRV_KEY_PATH)
+      ssh_pub_key = File.readlines(SSH_PUB_KEY_PATH).first.strip
       s.inline = <<-SHELL
         if grep -sq "#{ssh_pub_key}" /home/$USER/.ssh/authorized_keys; then
           echo "SSH keys already provisioned."
@@ -110,11 +118,16 @@ Vagrant.configure("2") do |config|
     ]
   end.to_h
 
+  FLIGHTENV_DEV = ENV.key?('FLIGHTENV_DEV') ?
+    ENV['FLIGHTENV_DEV'] != "false" :
+    FLAVOUR == 'dev'
+  BOOTSTRAP_GRIDWARE_BINARIES = ENV['BOOTSTRAP_GRIDWARE_BINARIES'] == "true"
+
   ansible_extra_vars = {
     'cluster_name' => ENV.fetch('CLUSTER_NAME', 'dev'),
     'compute_nodes' => "cnode[01-0#{NUM_NODES}]",
-    'flightenv_dev' => ENV['FLIGHTENV_DEV'] != "false",
-    'bootstrap_gridware_binaries' => ENV['BOOTSTRAP_GRIDWARE_BINARIES'] == "true",
+    'flightenv_dev' => FLIGHTENV_DEV,
+    'bootstrap_gridware_binaries' => BOOTSTRAP_GRIDWARE_BINARIES,
     'munge_key' => SecureRandom.hex(48),
     'etc_host_entries' => nodes.map do |n|
       {
@@ -166,14 +179,12 @@ Vagrant.configure("2") do |config|
           end
         end
 
-        if File.directory?(code_path)
-          build.vm.synced_folder code_path, "/code"
+        if File.directory?(CODE_PATH)
+          build.vm.synced_folder CODE_PATH, "/code"
         end
 
         build.vm.provision "ansible_local" do |ansible|
-          ansible.playbook = acceptance_prep ?
-            "ansible/playbook-acceptance-prep.yml" :
-            "ansible/playbook.yml"
+          ansible.playbook = "ansible/playbook-#{FLAVOUR}.yml"
           ansible.verbose = true
           ansible.limit = ENV.fetch('ANSIBLE_LIMIT', 'all')
           ansible.groups = ansible_groups
