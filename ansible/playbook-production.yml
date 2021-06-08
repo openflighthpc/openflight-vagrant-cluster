@@ -1,0 +1,16 @@
+---
+- name: Configure HPC Environment for OpenFlightHPC Compute
+  hosts: all
+  become: true
+  become_user: root
+  become_method: sudo
+  gather_facts: False
+  roles:
+    - base
+    - upstream
+    - slurm
+    - nfs
+    - flightenv
+    - flightenv-bootstrap
+    - flightweb
+    - vagrant-fixes

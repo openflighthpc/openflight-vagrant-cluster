@@ -7,7 +7,7 @@ compute_nodes: cnode[01-08]
 
 ## If true will enable development repositories for OpenFlight packages,
 ## installing the latest (and potentially volatile) versions of the user suite
-flightenv_dev: true
+enable_dev_repos: true
 
 # Colon separated list of desktop types to bootstrap. E.g., "xterm:gnome".
 bootstrap_desktop_types: "xterm"

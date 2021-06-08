@@ -1,12 +1,12 @@
 # vim: set filetype=ruby:
 
 FLAVOUR = ENV.fetch('FLAVOUR', 'dev')
-unless %w(dev acceptance).include?(FLAVOUR)
+unless %w(dev acceptance production).include?(FLAVOUR)
   $stderr.puts <<-EOF
     Unknown flavour #{FLAVOUR.inspect}
 
-    Environment variable FLAVOUR must be one of 'dev' or 'acceptance'
-    Defaults to 'dev'.
+    Environment variable FLAVOUR must be one of 'dev', 'acceptance' or
+    'production'.  Defaults to 'dev'.
   EOF
   exit 1
 end
@@ -118,15 +118,15 @@ Vagrant.configure("2") do |config|
     ]
   end.to_h
 
-  FLIGHTENV_DEV = ENV.key?('FLIGHTENV_DEV') ?
-    ENV['FLIGHTENV_DEV'] != "false" :
-    FLAVOUR == 'dev'
+  ENABLE_DEV_REPOS = ENV.key?('ENABLE_DEV_REPOS') ?
+    ENV['ENABLE_DEV_REPOS'] != "false" :
+    %w(dev acceptance).include?(FLAVOUR)
   BOOTSTRAP_GRIDWARE_BINARIES = ENV['BOOTSTRAP_GRIDWARE_BINARIES'] == "true"
 
   ansible_extra_vars = {
     'cluster_name' => ENV.fetch('CLUSTER_NAME', 'dev'),
     'compute_nodes' => "cnode[01-0#{NUM_NODES}]",
-    'flightenv_dev' => FLIGHTENV_DEV,
+    'enable_dev_repos' => ENABLE_DEV_REPOS,
     'bootstrap_gridware_binaries' => BOOTSTRAP_GRIDWARE_BINARIES,
     'munge_key' => SecureRandom.hex(48),
     'etc_host_entries' => nodes.map do |n|

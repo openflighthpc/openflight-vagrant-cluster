@@ -12,7 +12,7 @@
     section: openflight-dev
     option: enabled
     value: 1
-  when: flightenv_dev
+  when: enable_dev_repos
 
 - name: Enable PowerTools repository
   ini_file:
