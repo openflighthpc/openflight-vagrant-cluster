@@ -30,6 +30,15 @@
     mode: '0644'
   when: slurm_role == 'controller'
 
+- name: Configure Flight WWW HTTP dev landing page
+  template:
+    src: dev-http-landing-page.conf
+    dest: /opt/flight/etc/www/server-http.d/
+    owner: root
+    group: root
+    mode: '0644'
+  when: slurm_role == 'controller'
+
 - name: Restart Flight WWW
   command: /opt/flight/bin/flight service restart www
   when: slurm_role == 'controller'
