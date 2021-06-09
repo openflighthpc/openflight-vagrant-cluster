@@ -57,10 +57,6 @@
     mode: '0600'
   when: slurm_role == 'controller'
 
-- name: Turn on SlurmDBD
-  service: name=flight-slurmdbd state=started enabled=yes
-  when: slurm_role == 'controller'
-
 - name: Create spool directory [ctld]
   file:
     path: /opt/flight/opt/slurm/var/spool/slurm.state
@@ -77,16 +73,6 @@
     group: nobody
   when: slurm_role == 'exec'
 
-- name: Add munge key
-  copy:
-    content: "{{ munge_key }}"
-    dest: /etc/munge/munge.key
-    owner: munge
-    mode: 0400
-
-- name: Turn on munge
-  service: name=munge state=started enabled=yes
-
 - name: Create SLURM log dirs
   file:
     path: /opt/flight/opt/slurm/var/log/slurm
@@ -98,6 +84,20 @@
     path: /opt/flight/opt/slurm/var/run
     state: directory
     owner: nobody
+
+- name: Turn on SlurmDBD
+  service: name=flight-slurmdbd state=started enabled=yes
+  when: slurm_role == 'controller'
+
+- name: Add munge key
+  copy:
+    content: "{{ munge_key }}"
+    dest: /etc/munge/munge.key
+    owner: munge
+    mode: 0400
+
+- name: Turn on munge
+  service: name=munge state=started enabled=yes
 
 - name: Install slurm.conf
   template: src=slurm.conf dest=/opt/flight/opt/slurm/etc/slurm.conf
