@@ -127,6 +127,7 @@ Vagrant.configure("2") do |config|
     'cluster_name' => ENV.fetch('CLUSTER_NAME', 'dev'),
     'compute_nodes' => "cnode[01-0#{NUM_NODES}]",
     'enable_dev_repos' => ENABLE_DEV_REPOS,
+    'flavour' => FLAVOUR,
     'bootstrap_gridware_binaries' => BOOTSTRAP_GRIDWARE_BINARIES,
     'munge_key' => SecureRandom.hex(48),
     'etc_host_entries' => nodes.map do |n|
