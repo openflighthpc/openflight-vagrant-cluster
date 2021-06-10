@@ -149,6 +149,8 @@ Vagrant.configure("2") do |config|
     ansible_extra_vars['bootstrap_desktop_types'] = ENV['BOOTSTRAP_DESKTOP_TYPES']
   end
 
+  synced_folder_options = YAML.load(ENV.fetch('VAGRANT_SYNCED_FOLDER_OPTIONS', '{}'), symbolize_names: true)
+
   nodes.each do |node|
     is_gateway = node[:type] == 'gateway'
 
@@ -164,7 +166,11 @@ Vagrant.configure("2") do |config|
         id: 'ssh'
 
       if File.directory?(CODE_PATH)
-        build.vm.synced_folder CODE_PATH, "/code"
+        build.vm.synced_folder CODE_PATH, "/code", **synced_folder_options
+      end
+
+      unless synced_folder_options.empty?
+        build.vm.synced_folder '.', "/vagrant", **synced_folder_options
       end
 
       if is_gateway
