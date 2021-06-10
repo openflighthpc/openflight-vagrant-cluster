@@ -1,43 +1,50 @@
 # vim: set filetype=ruby:
 
-FLAVOUR = ENV.fetch('FLAVOUR', 'dev')
-unless %w(dev acceptance production).include?(FLAVOUR)
-  $stderr.puts <<-EOF
-    Unknown flavour #{FLAVOUR.inspect}
-
-    Environment variable FLAVOUR must be one of 'dev', 'acceptance' or
-    'production'.  Defaults to 'dev'.
-  EOF
-  exit 1
-end
-
-CODE_PATH = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
-if FLAVOUR == 'dev' && !File.directory?(File.expand_path(CODE_PATH))
-  $stderr.puts <<-EOF
-  Code path is not set.
-  
-  Either set the environment variable FLIGHT_CODE or create a symlink at
-  $HOME/code pointing to the directory containing your OpenFlight github
-  repositories.
-  EOF
-  exit 1
-end
-
-# Using Vagrant's inserted custom keys can result in suprising ansible
-# behaviour on the compute nodes once NFS has been setup.  We avoid that
-# behaviour by insisting on a single key used for all nodes.
-SSH_PRV_KEY_PATH = File.expand_path('~/.ssh/openflight-vagrant-cluster.key')
-SSH_PUB_KEY_PATH = "#{SSH_PRV_KEY_PATH}.pub"
-if !File.file?(SSH_PRV_KEY_PATH) || !File.file?(SSH_PUB_KEY_PATH)
-  $stderr.puts <<-EOF
-    You need to create a passwordless SSH key-pair and save them to
-    ~/.ssh/openflight-vagrant-cluster.key
-    ~/.ssh/openflight-vagrant-cluster.key.pub
-  EOF
-  exit 1
-end
-
 Vagrant.configure("2") do |config|
+  # Attempt to load vagrant-env
+  begin
+    config.env.enable
+  rescue Exception
+    $stderr.puts "Failed to enable vagrant-env, continuing..."
+  end
+
+  FLAVOUR = ENV.fetch('FLAVOUR', 'dev')
+  unless %w(dev acceptance production).include?(FLAVOUR)
+    $stderr.puts <<-EOF
+      Unknown flavour #{FLAVOUR.inspect}
+
+      Environment variable FLAVOUR must be one of 'dev', 'acceptance' or
+      'production'.  Defaults to 'dev'.
+    EOF
+    exit 1
+  end
+
+  CODE_PATH = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
+  if FLAVOUR == 'dev' && !File.directory?(File.expand_path(CODE_PATH))
+    $stderr.puts <<-EOF
+    Code path is not set.
+
+    Either set the environment variable FLIGHT_CODE or create a symlink at
+    $HOME/code pointing to the directory containing your OpenFlight github
+    repositories.
+    EOF
+    exit 1
+  end
+
+  # Using Vagrant's inserted custom keys can result in suprising ansible
+  # behaviour on the compute nodes once NFS has been setup.  We avoid that
+  # behaviour by insisting on a single key used for all nodes.
+  SSH_PRV_KEY_PATH = File.expand_path('~/.ssh/openflight-vagrant-cluster.key')
+  SSH_PUB_KEY_PATH = "#{SSH_PRV_KEY_PATH}.pub"
+  if !File.file?(SSH_PRV_KEY_PATH) || !File.file?(SSH_PUB_KEY_PATH)
+    $stderr.puts <<-EOF
+      You need to create a passwordless SSH key-pair and save them to
+      ~/.ssh/openflight-vagrant-cluster.key
+      ~/.ssh/openflight-vagrant-cluster.key.pub
+    EOF
+    exit 1
+  end
+
   # Number of compute nodes.  Must be between 1 and 9.
   NUM_NODES = 1
 
