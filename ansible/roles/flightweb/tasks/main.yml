@@ -1,14 +1,5 @@
-- name: Install web suite
-  yum: name=flight-web-suite state=present
-  when: slurm_role == 'controller'
-
-- name: Install optional desktop packages
-  yum:
-    name:
-      - netpbm-progs
-      - python-websockify
-      - xorg-x11-apps
-    state: present
+- name: Install web suite utils
+  yum: name=flight-web-suite-utils state=present
   when: slurm_role == 'controller'
 
 - name: Identify cluster domain name
@@ -16,44 +7,22 @@
   register: gateway_domain
   when: slurm_role == 'controller'
 
-- name: Generate self-signed SSL certs
-  command: "/opt/flight/bin/flight www cert-gen --cert-type self-signed --domain {{ gateway_domain.stdout }}"
+- name: Configure web suite domain
+  command: "/opt/flight/bin/flight config set web-suite.domain {{ gateway_domain.stdout }}"
   when: slurm_role == 'controller'
 
-- name: Enable HTTPS
-  command: "/opt/flight/bin/flight www enable-https"
-  ignore_errors: yes
+- name: Install web suite
+  yum: name=flight-web-suite state=present
   when: slurm_role == 'controller'
 
-- name: Put web suite files in place
+- name: Configure landing page
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   loop:
     - { src: 'environment.yaml', dest: '/opt/flight/opt/www/landing-page/default/content/data/environment.yaml' }
-    - { src: 'login-and-file-manager-api.yml', dest: '/opt/flight/var/lib/service/login-api.yml' }
-    - { src: 'login-and-file-manager-api.yml', dest: '/opt/flight/var/lib/service/file-manager-api.yml' }
   when: slurm_role == 'controller'
 
-- name: Modify existing web suite config files
-  lineinfile:
-    path: "{{ item.path }}"
-    line: "{{ item.line }}"
-  loop:
-    - { path: '/opt/flight/etc/service/env/login-api', line: 'FLIGHT_LOGIN_SSO_COOKIE_DOMAIN={{ gateway_domain.stdout }}' }
-    - { path: '/opt/flight/etc/service/env/file-manager-api', line: 'flight_FILE_MANAGER_API_cloudcmd_cookie_domain={{ gateway_domain.stdout }}' }
-  when: slurm_role == 'controller'
-
-- name: Apply configuration changes
+- name: Recompile landing page
   command: "/opt/flight/bin/flight landing-page compile"
   when: slurm_role == 'controller'
-
-- name: Start services
-  command: "/opt/flight/bin/flight service start {{ item }}"
-  loop:
-    - login-api
-    - console-api
-    - desktop-restapi
-    - file-manager-api
-  when: slurm_role == 'controller'
-
