@@ -156,6 +156,10 @@ Vagrant.configure("2") do |config|
         host: node[:ssh_port],
         id: 'ssh'
 
+      if File.directory?(CODE_PATH)
+        build.vm.synced_folder CODE_PATH, "/code"
+      end
+
       if is_gateway
         # Expose Flight WWW
         build.vm.network "forwarded_port",
@@ -178,10 +182,6 @@ Vagrant.configure("2") do |config|
                 host_ip: '127.0.0.1'
             end
           end
-        end
-
-        if File.directory?(CODE_PATH)
-          build.vm.synced_folder CODE_PATH, "/code"
         end
 
         build.vm.provision "ansible_local" do |ansible|
