@@ -1,18 +1,22 @@
-- name: Install web suite utils
-  yum: name=flight-web-suite-utils state=present
-  when: slurm_role == 'controller'
-
 - name: Identify cluster domain name
   command: "hostname -d"
   register: gateway_domain
   when: slurm_role == 'controller'
 
-- name: Configure web suite domain
-  command: "/opt/flight/bin/flight config set web-suite.domain {{ gateway_domain.stdout }}"
-  when: slurm_role == 'controller'
-
 - name: Install web suite
   yum: name=flight-web-suite state=present
+  when: slurm_role == 'controller'
+
+- name: Configure web suite domain
+  command: "/opt/flight/bin/flight web-suite set-domain {{ gateway_domain.stdout }}"
+  when: slurm_role == 'controller'
+
+- name: Restart web suite
+  command: "/opt/flight/bin/flight web-suite start"
+  when: slurm_role == 'controller'
+
+- name: Enable web suite
+  command: "/opt/flight/bin/flight web-suite enable"
   when: slurm_role == 'controller'
 
 - name: Configure landing page
