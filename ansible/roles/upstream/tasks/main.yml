@@ -1,7 +1,7 @@
 # We need updated ca-certificates to add OpenFlight Repo.  Let's just updated
 # every package.
 - name: Update packages
-  yum: name=* state=latest
+  yum: name=ca-certificates state=latest
 
 - name: Install EPEL Repo
   yum: name=epel-release state=present
