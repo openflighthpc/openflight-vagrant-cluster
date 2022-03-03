@@ -2,7 +2,7 @@
 title: Flight File Manager Access Service (Dev)
 short_title: File Manager (Dev)
 subtitle: Access file manager sessions
-path: /dev/files
+path: /files
 fa_icon: file-o
 ---
 The *Flight File Manager Service* allows you to access your
