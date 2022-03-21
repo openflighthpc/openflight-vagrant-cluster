@@ -11,7 +11,9 @@ unless %w(dev acceptance production).include?(FLAVOUR)
   exit 1
 end
 
-CODE_PATH = ENV['FLIGHT_CODE'] || "#{ENV['HOME']}/code"
+CODE_PATH = [ ENV['FLIGHT_CODE'], "#{ENV['HOME']}/code" ]
+  .compact
+  .detect { |p| File.directory?(File.expand_path(p)) }
 if FLAVOUR == 'dev' && !File.directory?(File.expand_path(CODE_PATH))
   $stderr.puts <<-EOF
   Code path is not set.
@@ -171,6 +173,10 @@ Vagrant.configure("2") do |config|
           host: 8443,
           host_ip: '127.0.0.1'
 
+        # Notify forwarder forwards notifications for file sysmtem changes.
+        # This enables quick dev reloading in `yarn run start` and rails apps.
+        build.notify_forwarder.port = 22020
+
         # Expose ports used by development webapps and api, e.g.,
         # `flight-desktop-webapp`, and `flight-desktop-restapi.
         if ENV['EXPOSE_DEV_PORTS'] == 'true'
@@ -198,6 +204,10 @@ Vagrant.configure("2") do |config|
             "--extra-vars", ansible_extra_vars.to_json.inspect,
           ]
         end
+
+      else
+        # Not the gateway machine.
+        build.notify_forwarder.enable = false
       end
     end
   end
