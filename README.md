@@ -5,7 +5,8 @@ work on OpenFlight R&D projects.
 
 ## Prerequisites
 
-An installation of a recent version of Vagrant.
+* An installation of a recent version of Vagrant.
+* The vagrant-notify-forwarder plugin: https://github.com/mhallin/vagrant-notify-forwarder
 
 ## Quick start
 
@@ -14,6 +15,8 @@ cd openflight-vagrant-cluster
 vagrant up
 vagrant ssh chead1
 ```
+
+In case this doesn't work, see the next section on Configuration.
 
 The host directory `~/code` is mounted on `chead1` at `/code`.  Develop your
 project on your host and test it on `chead1`.
@@ -37,12 +40,14 @@ By default, an OpenFlight Vagrant Cluster consists of a gateway machine,
 `chead`, and a compute node `cnode01`.  The number of nodes can be changed by
 editing [Vagrantfile](Vagrantfile) and changing the variable `NUM_NODES`.
 
-If you want a directory other than `~/code` to be mounted on `chead1`, set the
+It is assumed that the cluster will be hosted within directory `~/code`. If you want a directory other than `~/code` to be mounted on `chead1`, set the
 environment variable `FLIGHT_CODE` when running `vagrant up`.
 
 The nodes share a private network, which defaults to `172.17.177.0/24`. You
 can change this by editing [Vagrantfile](Vagrantfile) and the [ansible group
 vars](ansible/group_vars/all).
+
+You can also change the ranges of IP addresses accepted by VirtualBox by editing/creating `/etc/vbox/networks.conf`. Enter the ranges in the format: `* <range1> <range2>` etc.
 
 ### SSH key configuration
 
