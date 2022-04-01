@@ -7,4 +7,6 @@
   gather_facts: False
   roles:
     - base
+    - upstream
+    - slurm
     - nfs

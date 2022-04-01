@@ -9,23 +9,10 @@
     /opt/flight/bin/flight service configure www --config '{"port": "8080", "https_port": "8443"}'
   when:
     - slurm_role == 'controller'
-    # Production `flight-service` currently doesn't support `--config`.
-    - flavour != 'production'
-
-- name: Manually change ports for Flight WWW
-  shell: |
-    echo <<EOF
-    You need to manually configure the ports for Flight WWW.
-    Run the following and set HTTP Port to 8080 and HTTPS Port to 8443
-
-      /opt/flight/bin/flight service configure www
-
-    EOF
-  when:
-    - slurm_role == 'controller'
-    # Production `flight-service` currently doesn't support `--config`.
-    - flavour == 'production'
+    - flavour != 'acceptance'
 
 - name: Restart Flight WWW
   command: /opt/flight/bin/flight service restart www
-  when: slurm_role == 'controller'
+  when:
+    - slurm_role == 'controller'
+    - flavour != 'acceptance'
