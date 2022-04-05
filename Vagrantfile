@@ -174,9 +174,24 @@ Vagrant.configure("2") do |config|
           host: 8443,
           host_ip: '127.0.0.1'
 
-        # Notify forwarder forwards notifications for file sysmtem changes.
-        # This enables quick dev reloading in `yarn run start` and rails apps.
-        build.notify_forwarder.port = 22020
+        if FLAVOUR == 'dev'
+          if Vagrant.has_plugin?("vagrant-notify-forwarder")
+            # Notify forwarder forwards notifications for file sysmtem
+            # changes.  This enables quick dev reloading in `yarn run start`
+            # and rails apps.
+            build.notify_forwarder.port = 22020
+          else
+            $stderr.puts <<~EOF
+            WARNING: vagrant-notify-forwarder is not installed.
+
+            A much better development experience for the web suite is to be
+            had be installing vagrant-notify-forwarder.
+
+              vagrant plugin install vagrant-notify-forwarder
+
+            EOF
+          end
+        end
 
         # Expose ports used by development webapps and api, e.g.,
         # `flight-desktop-webapp`, and `flight-desktop-restapi.
@@ -207,8 +222,10 @@ Vagrant.configure("2") do |config|
         end
 
       else
-        # Not the gateway machine.
-        build.notify_forwarder.enable = false
+        if Vagrant.has_plugin?("vagrant-notify-forwarder")
+          # Not the gateway machine, so no notify-forwarder.
+          build.notify_forwarder.enable = false
+        end
       end
     end
   end
