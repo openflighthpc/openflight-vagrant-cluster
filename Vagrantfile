@@ -13,8 +13,9 @@ end
 
 CODE_PATH = [ ENV['FLIGHT_CODE'], "#{ENV['HOME']}/code" ]
   .compact
-  .detect { |p| File.directory?(File.expand_path(p)) }
-if FLAVOUR == 'dev' && !File.directory?(File.expand_path(CODE_PATH))
+  .map { |p| File.expand_path(p) }
+  .detect { |p| File.directory?(p) }
+if FLAVOUR == 'dev' && CODE_PATH.nil?
   $stderr.puts <<-EOF
   Code path is not set.
   
