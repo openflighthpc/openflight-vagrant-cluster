@@ -6,7 +6,12 @@ work on OpenFlight R&D projects.
 ## Prerequisites
 
 * An installation of a recent version of Vagrant.
-* The vagrant-notify-forwarder plugin: https://github.com/mhallin/vagrant-notify-forwarder
+
+If using OpenFlight Vagrant Cluster for development the following plugin is
+highly recommended.
+
+* The `vagrant-notify-forwarder` plugin:
+  https://github.com/mhallin/vagrant-notify-forwarder
 
 ## Quick start
 
@@ -37,17 +42,21 @@ cd /code/flight-desktop
 ## Configuration
 
 By default, an OpenFlight Vagrant Cluster consists of a gateway machine,
-`chead`, and a compute node `cnode01`.  The number of nodes can be changed by
+`chead1`, and a compute node `cnode01`.  The number of nodes can be changed by
 editing [Vagrantfile](Vagrantfile) and changing the variable `NUM_NODES`.
 
-It is assumed that the cluster will be hosted within directory `~/code`. If you want a directory other than `~/code` to be mounted on `chead1`, set the
-environment variable `FLIGHT_CODE` when running `vagrant up`.
+The host directory `~/code` is mounted on `chead1` at `/code`.  This is the
+directory where your OpenFlight projects should be found.  If you want a
+directory other than `~/code` to be mounted on `chead1`, set the environment
+variable `FLIGHT_CODE` when running `vagrant up`.
 
 The nodes share a private network, which defaults to `172.17.177.0/24`. You
 can change this by editing [Vagrantfile](Vagrantfile) and the [ansible group
 vars](ansible/group_vars/all).
 
-You can also change the ranges of IP addresses accepted by VirtualBox by editing/creating `/etc/vbox/networks.conf`. Enter the ranges in the format: `* <range1> <range2>` etc.
+You can also change the ranges of IP addresses accepted by VirtualBox by
+editing/creating `/etc/vbox/networks.conf`. Enter the ranges in the format: `*
+<range1> <range2>` etc.
 
 ### SSH key configuration
 
@@ -103,7 +112,7 @@ TODO: Finish documentation
 * The webapps can also be accessed without proxying via Flight WWW.
   * To do so the webapp needs to be configured accordingly.  Do this by
     editing its `.env.development` file and restarting.
-  * `chead` will need to be restarted to expose the development ports.
+  * `chead1` will need to be restarted to expose the development ports.
     `EXPOSE_DEV_PORTS=true DEV_PORT_PREFIX=1 vagrant reload chead1`.
   * This will expose the ports used by the development apps to the host,
     prefixed by `1`.  So the Flight Desktop Webapp, which binds to port `3001`
