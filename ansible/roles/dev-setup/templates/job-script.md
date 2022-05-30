@@ -1,9 +1,10 @@
 ---
-title: Flight Job Script Service (Dev)
-short_title: Job Scripts (Dev)
-subtitle: Create customised job scripts from templates
+title: Flight Executor (Dev)
+short_title: Jobs (Dev)
+subtitle: Create and manage your jobs
 path: /job-scripts
 fa_icon: file-code-o
 ---
-The *Flight Job Script Service* allows you to create
-customised job scripts from predefined templates.
+The *Flight Executor* service allows you to create and manage
+customised job scripts from predefined templates, launch jobs and
+monitor their activity.

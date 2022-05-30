@@ -1,10 +1,10 @@
 ---
-title: Flight Desktop Access Service (Dev)
-short_title: Desktop (Dev)
+title: Flight Desktop (Dev)
+short_title: Desktops (Dev)
 subtitle: Access interactive GUI desktop sessions
 path: /desktop
 fa_icon: desktop
 ---
-The *Flight Desktop Access Service* allows you to access interactive
+The *Flight Desktop* service allows you to access interactive
 GUI (graphical user interface) desktop sessions running on your
-cluster from the comfort of your browser.
+cluster.
