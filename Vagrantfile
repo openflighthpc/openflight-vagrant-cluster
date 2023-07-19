@@ -41,6 +41,8 @@ Vagrant.configure("2") do |config|
   # Number of compute nodes.  Must be between 1 and 9.
   NUM_NODES = 1
 
+  config.vbguest.auto_update = false
+
   # NOTE: If changing the IP address below also change the network in
   # `nfs_shares`.
   nodes = [
@@ -100,6 +102,16 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.provision "shell", privileged: true do |s|
+    s.inline = <<-OUT
+    cd /etc/yum.repos.d/
+    sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+    sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+    dnf update -y
+    OUT
+  end
+
+
   ansible_groups = {
     "gateway" => nodes.select{|n| n[:type] == 'gateway'}.map{|n| n[:vmname]},
     "nodes"   => nodes.select{|n| n[:type] == 'node'}.map{|n| n[:vmname]},
@@ -130,6 +142,7 @@ Vagrant.configure("2") do |config|
     'flavour' => FLAVOUR,
     'bootstrap_gridware_binaries' => BOOTSTRAP_GRIDWARE_BINARIES,
     'munge_key' => SecureRandom.hex(48),
+    'ansible_python_interpreter' => '/usr/bin/python3',
     'etc_host_entries' => nodes.map do |n|
       {
         name: n[:vmname],
@@ -146,8 +159,15 @@ Vagrant.configure("2") do |config|
     is_gateway = node[:type] == 'gateway'
 
     config.vm.define node[:vmname], primary: is_gateway do |build|
-      build.vm.box = "bento/centos-7"
+      build.vm.box = "bento/centos-8"
       build.vm.hostname = node[:hostname]
+
+      build.vm.provision "shell", privileged: true do |s|
+        s.inline = <<-OUT
+          dnf install -y python3.9
+          python3.9 -m pip install ansible
+        OUT
+      end
 
       build.vm.network "private_network", ip: node[:private_ip]
 
@@ -187,6 +207,7 @@ Vagrant.configure("2") do |config|
         build.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "ansible/playbook-#{FLAVOUR}.yml"
           ansible.verbose = false
+          ansible.install = false
           ansible.limit = ENV.fetch('ANSIBLE_LIMIT', 'all')
           ansible.groups = ansible_groups
           ansible.host_vars = ansible_host_vars
