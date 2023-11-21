@@ -151,7 +151,7 @@ Vagrant.configure("2") do |config|
     is_gateway = node[:type] == 'gateway'
 
     config.vm.define node[:vmname], primary: is_gateway do |build|
-      build.vm.box = "bento/centos-7"
+      build.vm.box = "bento/rockylinux-9"
       build.vm.hostname = node[:hostname]
 
       build.vm.network "private_network", ip: node[:private_ip]
