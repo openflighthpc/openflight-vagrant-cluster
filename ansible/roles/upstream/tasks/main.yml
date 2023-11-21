@@ -8,8 +8,9 @@
 
 - name: Add OpenFlight Release Repo
   yum: 
-    name: "https://repo.openflighthpc.org/openflight/{{ ansible_distribution |lower }}/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/openflighthpc-release-3-1.noarch.rpm"
+    name: "https://repo.openflighthpc.org/openflight/centos/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/openflighthpc-release-3-1.noarch.rpm"
     state: present
+    disable_gpg_check: yes
 
 - name: Enabling OpenFlight Development Repo
   ini_file:
