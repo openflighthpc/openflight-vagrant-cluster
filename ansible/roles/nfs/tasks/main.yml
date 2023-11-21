@@ -38,7 +38,7 @@
 
 - name: Start NFS server service
   service: "name=nfs-server state=started enabled=yes"
-  when: nfs_role == 'server' and ansible_distribution_major_version == '8'
+  when: nfs_role == 'server'
 
 - name: Start NFS service
   service: "name=nfs state=started enabled=yes"
@@ -50,5 +50,3 @@
 
 - name: Mount NFS exports
   command: mount -a
-  args:
-    warn: no
