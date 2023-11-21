@@ -20,10 +20,9 @@
     value: 1
   when: enable_dev_repos
 
-- name: Enable PowerTools repository
+- name: Enabling CRB repository
   ini_file:
-    dest: /etc/yum.repos.d/CentOS-PowerTools.repo
-    section: PowerTools
+    dest: /etc/yum.repos.d/rocky.repo
+    section: crb
     option: enabled
     value: 1
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == '8'
