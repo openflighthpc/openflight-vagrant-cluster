@@ -1,11 +1,3 @@
-- name: Prepare desktop types
-  command: "/opt/flight/bin/flight desktop prepare {{ item }}"
-  async: 600
-  poll: 15
-  loop: "{{ bootstrap_desktop_types | split(':') }}"
-  when:
-    - "'gateway' in group_names"
-
 - name: Add gridware binary support
   file:
     path: "/opt/apps/flight/env/u"
