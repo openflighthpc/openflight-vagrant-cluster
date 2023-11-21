@@ -44,6 +44,8 @@ Vagrant.configure("2") do |config|
   # Number of compute nodes.  Must be between 1 and 9.
   NUM_NODES = 1
 
+  config.vbguest.auto_update = false
+
   # NOTE: If changing the IP address below also change the network in
   # `nfs_shares`.
   nodes = [
