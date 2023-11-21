@@ -208,9 +208,22 @@ Vagrant.configure("2") do |config|
           end
         end
 
+        # More recent RHEL versions have some dependency changes that prevent
+        # Vagrant from installing ansible properly. Instead, we're installing
+        # it via pip.
+        #
+        # See: https://github.com/hashicorp/vagrant/issues/13181
+        build.vm.provision "shell" do |s|
+          s.inline = <<-OUT
+            sudo dnf install python3-pip -y
+            python3 -m pip install ansible
+          OUT
+        end
+
         build.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "ansible/playbook-#{FLAVOUR}.yml"
           ansible.verbose = false
+          ansible.install = false
           ansible.limit = ENV.fetch('ANSIBLE_LIMIT', 'all')
           ansible.groups = ansible_groups
           ansible.host_vars = ansible_host_vars
